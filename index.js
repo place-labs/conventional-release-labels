@@ -8,7 +8,6 @@ const api = module.exports = {
   addLabels,
   isPullRequest,
   main,
-  removeLabel
 }
 
 async function main () {
@@ -57,12 +56,6 @@ async function main () {
   if (cc.breaking) labels.push(labelMap.breaking)
   if (labelMap[cc.type]) labels.push(labelMap[cc.type])
   if (labels.length || ignoredTypes.includes(cc.type)) {
-    // Remove all configured Conventional Commit labels:
-    for (const label of Object.values(labelMap)) {
-      await api.removeLabel(label, payload)
-    }
-    // Also remove the special ignore label:
-    await api.removeLabel(ignoreLabel, payload)
     // Add special ignore label to conventional commit types like "chore:":
     if (ignoredTypes.includes(cc.type)) {
       await api.addLabels([ignoreLabel], payload)
@@ -85,21 +78,6 @@ async function addLabels (labels, payload) {
     issue_number: payload.pull_request.number,
     labels
   })
-}
-
-async function removeLabel (name, payload) {
-  const octokit = getOctokit()
-  try {
-    await octokit.rest.issues.removeLabel({
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
-      issue_number: payload.pull_request.number,
-      name
-    })
-  } catch (err) {
-    if (err.status === 404) return undefined
-    else throw err
-  }
 }
 
 let cachedOctokit
